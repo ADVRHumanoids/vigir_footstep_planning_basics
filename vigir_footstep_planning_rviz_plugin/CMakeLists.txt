@@ -6,15 +6,21 @@ project(vigir_footstep_planning_rviz_plugin)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  rviz
   actionlib
   actionlib_msgs
   pcl_conversions
   vigir_footstep_planning_msgs
+  vigir_footstep_planning_lib
 )
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(Qt4 COMPONENTS QtCore QtGui REQUIRED)
+include(${QT_USE_FILE})
 
+## I prefer the Qt signals and slots to avoid defining "emit", "slots",
+## etc because they can conflict with boost signals, so define QT_NO_KEYWORDS here.
+add_definitions(-DQT_NO_KEYWORDS)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -69,7 +75,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   actionlib_msgs#   vigir_footstep_planning_msgs
+#   actionlib_msgs
+#   vigir_footstep_planning_msgs
 # )
 
 ################################################
@@ -102,9 +109,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES vigir_footstep_planning_rviz_plugin
-#  CATKIN_DEPENDS actionlib actionlib_msgs pcl_conversions roscpp vigir_footstep_planning_msgs
+  INCLUDE_DIRS include
+  LIBRARIES vigir_footstep_planning_rviz_plugin
+  CATKIN_DEPENDS rviz actionlib actionlib_msgs pcl_conversions roscpp vigir_footstep_planning_msgs vigir_footstep_planning_lib
 #  DEPENDS system_lib
 )
 
@@ -116,13 +123,40 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
+  include
   ${catkin_INCLUDE_DIRS}
 )
 
+## Here we specify which header files need to be run through "moc",
+## Qt's meta-object compiler.
+qt4_wrap_cpp(MOC_FILES
+  include/${PROJECT_NAME}/drive_widget.h
+  include/${PROJECT_NAME}/imu_display.h
+  include/${PROJECT_NAME}/plant_flag_tool.h
+  include/${PROJECT_NAME}/teleop_panel.h
+)
+
+## Specify additional locations of header files
+set(HEADERS
+  include/${PROJECT_NAME}/drive_widget.h
+  include/${PROJECT_NAME}/flag.h
+  include/${PROJECT_NAME}/imu_display.h
+  include/${PROJECT_NAME}/imu_visual.h
+  include/${PROJECT_NAME}/plant_flag_tool.h
+  include/${PROJECT_NAME}/teleop_panel.h
+  ${MOC_FILES}
+)
+
+set(SOURCES
+  src/drive_widget.cpp
+  src/imu_display.cpp
+  src/imu_visual.cpp
+  src/plant_flag_tool.cpp
+  src/teleop_panel.cpp
+)
+
 ## Declare a C++ library
-# add_library(vigir_footstep_planning_rviz_plugin
-#   src/${PROJECT_NAME}/vigir_footstep_planning_rviz_plugin.cpp
-# )
+add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -134,12 +168,10 @@ include_directories(
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(vigir_footstep_planning_rviz_plugin_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(vigir_footstep_planning_rviz_plugin_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
 
 #############
 ## Install ##
@@ -156,11 +188,12 @@ include_directories(
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS vigir_footstep_planning_rviz_plugin vigir_footstep_planning_rviz_plugin_node
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+install(TARGETS
+  ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Mark cpp header files for installation
 # install(DIRECTORY include/${PROJECT_NAME}/
@@ -170,11 +203,16 @@ include_directories(
 # )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
+install(FILES
+  plugin_description.xml
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+install(DIRECTORY media/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/media)
+
+install(DIRECTORY icons/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/icons)
+
 
 #############
 ## Testing ##
