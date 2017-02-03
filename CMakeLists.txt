@@ -24,7 +24,7 @@ if(COMMAND cmake_policy)
     cmake_policy(SET CMP0017 NEW)
 endif(COMMAND cmake_policy)
 
-project(vigir_footstep_planning_core)
+project(vigir_footstep_planning_basics)
 
 add_subdirectory(vigir_footstep_planning_lib)
 add_subdirectory(vigir_footstep_planning_plugins)
